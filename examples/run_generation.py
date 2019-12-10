@@ -156,8 +156,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_type", default=None, type=str, required=True,
                         help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
+    common_help_str = "Path to pre-trained model or shortcut name selected in the list: " + ", ".join(ALL_MODELS)
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-                        help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(ALL_MODELS))
+                        help=common_help_str)
+    parser.add_argument("--tokenizer_name_or_path", default=None, type=str,
+                        help=common_help_str + ". By default uses 'model_name_or_path'")
     parser.add_argument("--prompt", type=str, default="")
     parser.add_argument("--padding_text", type=str, default="")
     parser.add_argument("--xlm_lang", type=str, default="", help="Optional language when used with the XLM model.")
@@ -180,11 +183,14 @@ def main():
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
 
+    if not args.tokenizer_name_or_path:
+        args.tokenizer_name_or_path = args.model_name_or_path
+
     set_seed(args)
 
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-    tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
+    tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name_or_path)
     model = model_class.from_pretrained(args.model_name_or_path)
     model.to(args.device)
     model.eval()
